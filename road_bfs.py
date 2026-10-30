@@ -29,7 +29,7 @@ def build_successors(edge_map):
             if next_id in edge_map:
                 next_ids.append(next_id)
 
-        # 去重，并按字符串顺序排列
+        # 按字符串顺序排列
         successors[edge_id] = sorted(set(next_ids))
 
     return successors

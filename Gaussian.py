@@ -1,5 +1,36 @@
 import math
 import random
+
+def calculate_edge_weights(edge_map, successors):
+    """
+    param: edge_map，允许 passenger 通行的路段字典
+    param: successors，各路段的后继路段字典
+    return: edge_weights，各路段的属性和原始权重字典
+    """
+    edge_weights = {}
+
+    for edge_id, edge in edge_map.items():
+        # 该路段的全部车道数量
+        lane_count = edge.getLaneNumber()
+
+        # 该路段的后继路段数量
+        successor_count = len(successors[edge_id])
+
+        # 路段长度，单位为米
+        length = edge.getLength()
+
+        # 计算原始权重
+        weight = lane_count * successor_count * length
+
+        edge_weights[edge_id] = {
+            "lane_count": lane_count,
+            "successor_count": successor_count,
+            "length": length,
+            "weight": weight,
+        }
+
+    return edge_weights
+
 def classify_days(total_days, event_days, rng):
     """
     param: total_days，模拟总天数，第 1 天默认为星期一
@@ -12,6 +43,7 @@ def classify_days(total_days, event_days, rng):
     if not isinstance(event_days, int) or isinstance(event_days, bool) or not 0 <= event_days <= total_days:
         raise ValueError("event_days 必须是 0 到 total_days 之间的整数")
 
+    # 在1到total_days之间随机选择event_days个天数作为突发模式
     events = set(rng.sample(range(1, total_days + 1), event_days))
     days = {"weekday": [], "weekend": [], "event": []}
     for day in range(1, total_days + 1):
@@ -119,32 +151,3 @@ def create_patterns(bfs_result, edge_weights, seed=None):
         "event": normalize_components(event, event_sigmas),
     }
 
-def calculate_edge_weights(edge_map, successors):
-    """
-    param: edge_map，允许 passenger 通行的路段字典
-    param: successors，各路段的后继路段字典
-    return: edge_weights，各路段的属性和原始权重字典
-    """
-    edge_weights = {}
-
-    for edge_id, edge in edge_map.items():
-        # 该路段的全部车道数量
-        lane_count = edge.getLaneNumber()
-
-        # 该路段的后继路段数量
-        successor_count = len(successors[edge_id])
-
-        # 路段长度，单位为米
-        length = edge.getLength()
-
-        # 计算原始权重
-        weight = lane_count * successor_count * length
-
-        edge_weights[edge_id] = {
-            "lane_count": lane_count,
-            "successor_count": successor_count,
-            "length": length,
-            "weight": weight,
-        }
-
-    return edge_weights
