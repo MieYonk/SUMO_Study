@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <input>
+        <net-file value="luwang/Beijing_nointernal.net.xml"/>
+        <route-files value="路由文件/generated1.rou.xml"/>
+    </input>
+    <time>
+        <begin value="0"/>
+    </time>
+</configuration>
