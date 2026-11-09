@@ -19,33 +19,18 @@ def build_destination_candidates(edge_map):
     return candidates
 
 
-def select_destination(candidates, origin_id, rng, constraint=None,
-                       exclude_origin=False, cumulative_weights=None):
+def select_destination(candidates, origin_id, rng, constraint=None):
     """
     param: candidates，build_destination_candidates 返回的候选列表
     param: origin_id，当前车辆起点的 edgeID
     param: rng，random.Random 随机数生成器
     param: constraint，可选约束函数，接收起点 ID 和候选路段字典，返回 True 或 False
-    param: exclude_origin，是否禁止终点与起点相同
-    param: cumulative_weights，与 candidates 对应的预先计算的累计权重
     return: 随机选中的终点 edgeID
     """
     if constraint is None:
         eligible = candidates
     else:
         eligible = [item for item in candidates if constraint(origin_id, item)]
-    if not eligible or (exclude_origin and len(eligible) == 1 and eligible[0]['edge_id'] == origin_id):
+    if not eligible:
         raise ValueError(f"起点 {origin_id} 没有满足约束的终点候选")
-    # 自定义约束改变候选列表时，必须重新计算权重。
-    if constraint is not None or cumulative_weights is None:
-        cumulative_weights = []
-        total = 0.0
-        for item in eligible:
-            total += item['weight']
-            cumulative_weights.append(total)
-    elif len(cumulative_weights) != len(eligible):
-        raise ValueError('累计权重必须与候选路段数量一致')
-    while True:
-        selected = rng.choices(eligible, cum_weights=cumulative_weights, k=1)[0]['edge_id']
-        if not exclude_origin or selected != origin_id:
-            return selected
+    return rng.choices(eligible, weights=[item["weight"] for item in eligible], k=1)[0]["edge_id"]

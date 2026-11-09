@@ -14,11 +14,9 @@ from collections import OrderedDict
 from pathlib import Path
 import numpy as np
 import networkx as nx
-from destination import build_destination_candidates, select_destination
-from Gaussian import calculate_edge_weights, classify_days, create_patterns
-from origins import build_mixture_distribution, sample_origins
 from road_bfs import read_edges, build_successors, build_road_graph, sort_edges_bfs
-
+from origins import build_mixture_distribution, sample_origins,calculate_edge_weights, classify_days, create_patterns
+from destination import build_destination_candidates, select_destination
 
 def cars_per_second_avg0(day=14, h1_start=7, h1_end=9, h2_start=17,
                          h2_end=19, total=100000, b1=2, b2=4):
@@ -107,12 +105,11 @@ def generate(net_path, trip_path, route_path, day=14, total=100000,
     day_mode = {day: mode for mode, dates in days.items() for day in dates}
     print('日期模式：', days, flush=True)
     candidates = build_destination_candidates(edges)
-    weights = [item['weight'] for item in candidates]
-    cumulative = []
-    total_weight = 0.0
-    for weight in weights:
-        total_weight += weight
-        cumulative.append(total_weight)
+
+    def allowed_destination(origin_id, candidate):
+        # 排除起点；如果调用方提供其他约束，也一起检查。
+        return (candidate['edge_id'] != origin_id and
+                (destination_constraint is None or destination_constraint(origin_id, candidate)))
 
     trips = []
     schedule = [second for second, count in cars_per_second_avg0(day=day, total=total)
@@ -125,13 +122,13 @@ def generate(net_path, trip_path, route_path, day=14, total=100000,
             edge_id = origin['edge_id']
             trips.append({'id': str(len(trips)), 'depart': second,
                           'from': edge_id, 'to': select_destination(
-                              candidates, edge_id, rng, constraint=destination_constraint,
-                              exclude_origin=True, cumulative_weights=cumulative)})
+                              candidates, edge_id, rng, constraint=allowed_destination)})
 
     # 对无路径的车辆保持原起点与出发时间，仅重新选择终点。
     pending = trips[:]
     routed = {}
     reachable_cache = OrderedDict()
+    tds=time.time()#生成路线开始
     with tempfile.TemporaryDirectory(prefix='sumo_routes_', dir=route_path.parent) as tmp:
         tmp = Path(tmp)
         # 用路段长度作为代价，避免 duarouter 默认按旅行时间求最快路线。
@@ -171,24 +168,24 @@ def generate(net_path, trip_path, route_path, day=14, total=100000,
                     if origin not in reachable_cache:
                         reachable = nx.descendants(graph, origin)
                         options = [item for item in candidates if item['edge_id'] in reachable]
-                        reachable_cache[origin] = (options, [item['weight'] for item in options])
+                        reachable_cache[origin] = options
                         if len(reachable_cache) > 8:
                             reachable_cache.popitem(last=False)
                     else:
                         reachable_cache.move_to_end(origin)
-                    options, option_weights = reachable_cache[origin]
+                    options = reachable_cache[origin]
                     if not options:
                         raise RuntimeError(f'起点 {origin} 没有可达的其他候选路段，无法生成路线')
                     trip['to'] = select_destination(
-                        options, origin, rng, constraint=destination_constraint,
-                        exclude_origin=True)
+                        options, origin, rng, constraint=allowed_destination)
         if pending:
             raise RuntimeError(f'{len(pending)} 辆车在 {retries} 次重试后仍无路线；例如 {pending[0]}。未生成最终文件。')
-
         # 最终输出按出发时间排序，保留成功路线对应的 trip。
         trips.sort(key=lambda x: (x['depart'], x['id']))
         trip_tmp = tmp / 'final.trips.xml'
         route_tmp = tmp / 'final.rou.xml'
+        tde=time.time()#生成路线结束
+        print(f'生成路线完成，耗时 {tde - tds:.2f} 秒，成功生成 {len(trips)} 辆路线', flush=True)
         write_trips(trip_tmp, trips)
         with route_tmp.open('w', encoding='utf-8', newline='\n') as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n<routes>\n')
@@ -208,10 +205,10 @@ if __name__ == '__main__':
     t1=time.time()
     cur_dir = Path(__file__).resolve().parent
     net_path = cur_dir / 'luwang' / 'Beijing_nointernal.net.xml'
-    trip_path = cur_dir / 'generated2.trips.xml'
-    route_path = cur_dir / 'generated2.rou.xml'
+    trip_path = cur_dir / '路由文件'/'3day_1event.trips.xml'
+    route_path = cur_dir / '路由文件'/'3day_1event.rou.xml'
     duarouter_path = 'duarouter'  # 如果未加入 PATH，请填写 duarouter.exe 的完整路径。
-    day = 1
+    day = 3
     total = 100000  # 整个模拟期的目标车辆总数
     event_days = 1
     seed = 42
