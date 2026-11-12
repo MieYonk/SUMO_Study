@@ -2,7 +2,7 @@
 <configuration>
     <input>
         <net-file value="luwang/Beijing_nointernal.net.xml"/>
-        <route-files value="路由文件/generated1.rou.xml"/>
+        <route-files value="路由文件/14day_1event_100000cars.rou.xml"/>
     </input>
     <time>
         <begin value="0"/>
