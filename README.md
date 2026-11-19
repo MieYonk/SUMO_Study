@@ -28,8 +28,6 @@ net文件中，学校公园内部的道路和普通道路采用相同的标签�
 
 ![图3](images/image3.png)
 
-![图4](images/image4.png)
-
 给路段分配排序号时，建立{edgeID:edge对象}字典，通过sumolib中的getOutgoing()方法获取路段的后续连接路段，建立{edgeID:[后续edgeID]}，调用networkx包，把路径作为图中的点，路径之间的联通关系作为有向边。[这里是networkx相关函数的使用方法](https://networkx.org/documentation/networkx-3.6.1/tutorial.html)。通过BFS广度优先搜索算法依次遍历路径图，给各个路径一个新的编号（rank）。
 
 ## 路径起点的确定
