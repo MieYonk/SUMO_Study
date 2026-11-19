@@ -275,11 +275,11 @@ if __name__ == '__main__':
     t1=time.perf_counter()
     cur_dir = Path(__file__).resolve().parent
     net_path = cur_dir / 'luwang' / 'Beijing_nointernal.net.xml'
-    trip_path = cur_dir / '路由文件'/'14day_1event_100000cars_hybrid.trips.xml'
-    route_path = cur_dir / '路由文件'/'14day_1event_100000cars_hybrid.rou.xml'
+    trip_path = cur_dir / '路由文件'/'3day_1event_25Wcars.trips.xml'
+    route_path = cur_dir / '路由文件'/'3day_1event_25Wcars.rou.xml'
     duarouter_path = 'duarouter'  # 如果未加入 PATH，请填写 duarouter.exe 的完整路径。
-    day = 14
-    total = 100000  # 整个模拟期的目标车辆总数
+    day = 3
+    total = 250000 # 整个模拟期的目标车辆总数
     event_days = 1
     seed = 42
     retries = 20

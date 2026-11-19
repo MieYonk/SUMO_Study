@@ -1,0 +1,5 @@
+Beijing_bbox_clipped.net.xml是经过裁剪的包含完整北京四环路的路网文件
+Beijing_nointernal.net.xml是通过sumo命令netconvert转换得到的，使用了 --no-internal-links参数。
+注：
+（1）osm单独下载较大的指定区域下载不了，只有先下载北京整个的路网数据，osm.pdf是北京整个的数据。再裁剪，这里面的xml是裁剪后的路网数据。
+（2）北京四环范围：116.2649–116.4901°E    39.8275–39.9903°N
